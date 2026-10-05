@@ -1,0 +1,178 @@
+syntax = "proto3";
+
+package aetherflow.v1;
+
+option go_package = "github.com/R-zin/Aetherflow/api/proto/v1;v1";
+
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_WORKFLOW_EXECUTION_STARTED = 1;
+  EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED = 2;
+  EVENT_TYPE_WORKFLOW_EXECUTION_FAILED = 3;
+  EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT = 4;
+  EVENT_TYPE_ACTIVITY_TASK_SCHEDULED = 5;
+  EVENT_TYPE_ACTIVITY_TASK_STARTED = 6;
+  EVENT_TYPE_ACTIVITY_TASK_COMPLETED = 7;
+  EVENT_TYPE_ACTIVITY_TASK_FAILED = 8;
+  EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT = 9;
+  EVENT_TYPE_TIMER_STARTED = 10;
+  EVENT_TYPE_TIMER_FIRED = 11;
+  EVENT_TYPE_TIMER_CANCELLED = 12;
+  EVENT_TYPE_WORKFLOW_TASK_SCHEDULED = 13;
+  EVENT_TYPE_WORKFLOW_TASK_STARTED = 14;
+  EVENT_TYPE_WORKFLOW_TASK_COMPLETED = 15;
+  EVENT_TYPE_COMPENSATION_RECORDED = 16;
+  EVENT_TYPE_COMPENSATION_STARTED = 17;
+  EVENT_TYPE_COMPENSATION_COMPLETED = 18;
+}
+
+enum WorkflowStatus {
+  WORKFLOW_STATUS_UNSPECIFIED = 0;
+  WORKFLOW_STATUS_RUNNING = 1;
+  WORKFLOW_STATUS_COMPLETED = 2;
+  WORKFLOW_STATUS_FAILED = 3;
+  WORKFLOW_STATUS_TIMED_OUT = 4;
+  WORKFLOW_STATUS_TERMINATED = 5;
+}
+
+message RetryPolicy {
+  int32 initial_interval_seconds = 1;
+  double backoff_coefficient = 2;
+  int32 max_interval_seconds = 3;
+  int32 max_attempts = 4;
+  repeated string non_retryable_error_types = 5;
+}
+
+message WorkflowExecutionStartedAttributes {
+  string workflow_id = 1;
+  string run_id = 2;
+  string workflow_type = 3;
+  string task_queue = 4;
+  bytes input_payload = 5;
+  int64 execution_timeout_seconds = 6;
+  RetryPolicy retry_policy = 7;
+}
+
+message WorkflowExecutionCompletedAttributes {
+  bytes result_payload = 1;
+}
+
+message WorkflowExecutionFailedAttributes {
+  string error_message = 1;
+  string error_details = 2;
+}
+
+message ActivityTaskScheduledAttributes {
+  string activity_id = 1;
+  string activity_type = 2;
+  string task_queue = 3;
+  bytes input_payload = 4;
+  int64 schedule_to_close_timeout_seconds = 5;
+  int64 start_to_close_timeout_seconds = 6;
+  int64 heartbeat_timeout_seconds = 7;
+  RetryPolicy retry_policy = 8;
+  int32 attempt = 9;
+}
+
+message ActivityTaskStartedAttributes {
+  string activity_id = 1;
+  int32 attempt = 2;
+  string worker_identity = 3;
+  int64 started_time_ns = 4;
+}
+
+message ActivityTaskCompletedAttributes {
+  string activity_id = 1;
+  bytes result_payload = 2;
+}
+
+message ActivityTaskFailedAttributes {
+  string activity_id = 1;
+  string error_message = 2;
+  bool non_retryable = 3;
+  int32 attempt = 4;
+  int64 next_retry_delay_ms = 5;
+}
+
+message ActivityTaskTimedOutAttributes {
+  string activity_id = 1;
+  string timeout_type = 2;
+}
+
+message TimerStartedAttributes {
+  string timer_id = 1;
+  int64 duration_ms = 2;
+  int64 fire_timestamp_ms = 3;
+}
+
+message TimerFiredAttributes {
+  string timer_id = 1;
+}
+
+message TimerCancelledAttributes {
+  string timer_id = 1;
+}
+
+message WorkflowTaskScheduledAttributes {
+  string task_queue = 1;
+  int64 timeout_seconds = 2;
+}
+
+message WorkflowTaskStartedAttributes {
+  int64 scheduled_event_id = 1;
+  string worker_identity = 2;
+}
+
+message WorkflowTaskCompletedAttributes {
+  int64 started_event_id = 1;
+  string worker_identity = 2;
+}
+
+message CompensationRecordedAttributes {
+  string compensation_id = 1;
+  string activity_id = 2;
+  string compensation_name = 3;
+  bytes input_payload = 4;
+}
+
+message CompensationStartedAttributes {
+  string compensation_id = 1;
+  string worker_identity = 2;
+}
+
+message CompensationCompletedAttributes {
+  string compensation_id = 1;
+  bytes result_payload = 2;
+  string error_message = 3;
+}
+
+message HistoryEvent {
+  int64 event_id = 1;
+  int64 timestamp_ns = 2;
+  EventType event_type = 3;
+  int64 epoch = 4;
+
+  oneof attributes {
+    WorkflowExecutionStartedAttributes workflow_execution_started_attributes = 5;
+    WorkflowExecutionCompletedAttributes workflow_execution_completed_attributes = 6;
+    WorkflowExecutionFailedAttributes workflow_execution_failed_attributes = 7;
+    ActivityTaskScheduledAttributes activity_task_scheduled_attributes = 8;
+    ActivityTaskStartedAttributes activity_task_started_attributes = 9;
+    ActivityTaskCompletedAttributes activity_task_completed_attributes = 10;
+    ActivityTaskFailedAttributes activity_task_failed_attributes = 11;
+    ActivityTaskTimedOutAttributes activity_task_timed_out_attributes = 12;
+    TimerStartedAttributes timer_started_attributes = 13;
+    TimerFiredAttributes timer_fired_attributes = 14;
+    TimerCancelledAttributes timer_cancelled_attributes = 15;
+    WorkflowTaskScheduledAttributes workflow_task_scheduled_attributes = 16;
+    WorkflowTaskStartedAttributes workflow_task_started_attributes = 17;
+    WorkflowTaskCompletedAttributes workflow_task_completed_attributes = 18;
+    CompensationRecordedAttributes compensation_recorded_attributes = 19;
+    CompensationStartedAttributes compensation_started_attributes = 20;
+    CompensationCompletedAttributes compensation_completed_attributes = 21;
+  }
+}
+
+message History {
+  repeated HistoryEvent events = 1;
+}

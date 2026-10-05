@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  coordinator-1:
+    build: .
+    command: ["aetherd", "--port", "7233", "--node-id", "coord-1", "--data-dir", "/data/coord-1"]
+    ports:
+      - "7233:7233"
+    volumes:
+      - coord1-data:/data/coord-1
+    restart: unless-stopped
+
+  trip-worker:
+    build: .
+    command: ["worker-example", "--server", "coordinator-1:7233", "--worker-id", "worker-trip-1"]
+    depends_on:
+      - coordinator-1
+    restart: unless-stopped
+
+volumes:
+  coord1-data:

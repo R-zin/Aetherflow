@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package aetherflow.v1;
+
+option go_package = "github.com/R-zin/Aetherflow/api/proto/v1;v1";
+
+import "api/proto/v1/events.proto";
+
+message StartWorkflowRequest {
+  string workflow_id = 1;
+  string workflow_type = 2;
+  string task_queue = 3;
+  bytes input_payload = 4;
+  int64 execution_timeout_seconds = 5;
+  RetryPolicy retry_policy = 6;
+}
+
+message StartWorkflowResponse {
+  string workflow_id = 1;
+  string run_id = 2;
+}
+
+message GetHistoryRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  int64 from_event_id = 3;
+}
+
+message GetHistoryResponse {
+  History history = 1;
+  WorkflowStatus status = 2;
+}
+
+message PollActivityTaskQueueRequest {
+  string task_queue = 1;
+  string worker_identity = 2;
+  int64 timeout_seconds = 3;
+}
+
+message PollActivityTaskQueueResponse {
+  bool has_task = 1;
+  string workflow_id = 2;
+  string run_id = 3;
+  string activity_id = 4;
+  string activity_type = 5;
+  bytes input_payload = 6;
+  int32 attempt = 7;
+  int64 schedule_to_close_timeout_seconds = 8;
+  int64 start_to_close_timeout_seconds = 9;
+  int64 heartbeat_timeout_seconds = 10;
+}
+
+message RespondActivityCompletedRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  string activity_id = 3;
+  string worker_identity = 4;
+  bytes result_payload = 5;
+}
+
+message RespondActivityCompletedResponse {
+  bool acknowledged = 1;
+}
+
+message RespondActivityFailedRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  string activity_id = 3;
+  string worker_identity = 4;
+  string error_message = 5;
+  string error_details = 6;
+  bool non_retryable = 7;
+}
+
+message RespondActivityFailedResponse {
+  bool acknowledged = 1;
+  bool will_retry = 2;
+  int64 retry_delay_ms = 3;
+}
+
+message RecordHeartbeatRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  string activity_id = 3;
+  string worker_identity = 4;
+  bytes details = 5;
+}
+
+message RecordHeartbeatResponse {
+  bool cancel_requested = 1;
+}
+
+message GetClusterStatusRequest {}
+
+message ShardAssignment {
+  uint32 shard_id = 1;
+  string owner_node_id = 2;
+  int64 epoch = 3;
+}
+
+message GetClusterStatusResponse {
+  repeated string active_nodes = 1;
+  repeated ShardAssignment shard_assignments = 2;
+}
+
+service WorkflowService {
+  rpc StartWorkflowExecution(StartWorkflowRequest) returns (StartWorkflowResponse);
+  rpc GetWorkflowExecutionHistory(GetHistoryRequest) returns (GetHistoryResponse);
+  rpc PollActivityTaskQueue(PollActivityTaskQueueRequest) returns (PollActivityTaskQueueResponse);
+  rpc RespondActivityTaskCompleted(RespondActivityCompletedRequest) returns (RespondActivityCompletedResponse);
+  rpc RespondActivityTaskFailed(RespondActivityFailedRequest) returns (RespondActivityFailedResponse);
+  rpc RecordActivityHeartbeat(RecordHeartbeatRequest) returns (RecordHeartbeatResponse);
+  rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
+}

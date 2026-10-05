@@ -1,0 +1,23 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+*.test
+*.out
+
+# Data directories
+data/
+*.db
+*.wal
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
